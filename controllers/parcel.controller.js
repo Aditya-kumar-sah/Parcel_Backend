@@ -1,5 +1,6 @@
 const xml2js = require("xml2js");
 const Parcel = require("../models/parcel.model");
+const CategoryRange = require("../models/limit.model");
 
 const uploadXmlAndSaveParcels = async (req, res) => {
   try {
@@ -8,6 +9,13 @@ const uploadXmlAndSaveParcels = async (req, res) => {
     }
 
     const xmlData = req.file.buffer.toString("utf-8");
+
+    let limits = await CategoryRange.findOne();
+    if (!limits) {
+      limits = await CategoryRange.create({});
+    }
+
+    const { minValue, maxValue, thresholdValue } = limits;
 
     xml2js.parseString(xmlData, { explicitArray: false }, async (err, result) => {
       if (err) {
@@ -24,10 +32,33 @@ const uploadXmlAndSaveParcels = async (req, res) => {
       const savedParcels = [];
 
       for (const p of parcelsArray) {
+        const weight = Number(p.Weight);
+        const value = Number(p.Value);
+
+        let department = undefined;
+        let isApproved = true;
+
+        if (value > thresholdValue) {
+          isApproved = false;     
+          department = undefined; 
+        } 
+        else {
+          isApproved = true;   
+          if (weight <= minValue) {
+            department = "Mail";
+          } else if (weight <= maxValue) {
+            department = "Regular";
+          } else {
+            department = "Heavy";
+          }
+        }
+
         const parcel = new Parcel({
           name: p.Receipient.Name,
-          weight: Number(p.Weight),
-          value: Number(p.Value),
+          weight,
+          value,
+          isApproved,
+          department, 
           address: {
             street: p.Receipient.Address.Street,
             houseNumber: p.Receipient.Address.HouseNumber,
@@ -41,7 +72,7 @@ const uploadXmlAndSaveParcels = async (req, res) => {
       }
 
       return res.status(201).json({
-        message: "Parcels uploaded successfully",
+        message: "Parcels uploaded, validated & categorized successfully",
         totalSaved: savedParcels.length,
         parcels: savedParcels,
       });
@@ -53,4 +84,15 @@ const uploadXmlAndSaveParcels = async (req, res) => {
 };
 
 
-module.exports = {uploadXmlAndSaveParcels}
+const getApprovedParcels = async (req, res) => {
+  try {
+    const parcels = await Parcel.find({ isApproved: true });
+
+    res.status(200).json(parcels);
+  } catch (error) {
+    console.error("GET APPROVED ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { uploadXmlAndSaveParcels ,getApprovedParcels};
