@@ -3,6 +3,8 @@ const app = express()
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
 const connectDB = require("./db/conn")
+const userroute = require("./routes/user.route")
+const parcelroute = require("./routes/parcel.route")
 require("dotenv").config()
 
 
@@ -18,6 +20,8 @@ app.use(cors({
 
 app.use('/uploads',express.static('uploads'))
 
+app.use("/api",userroute)
+app.use("/api/parcel",parcelroute)
 
 if (process.env.NODE_ENV !== "test") {
   connectDB();

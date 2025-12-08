@@ -1,26 +1,17 @@
-const mongoose= require("mongoose")
+const mongoose = require("mongoose");
+
+const AddressSchema = new mongoose.Schema({
+  street: String,
+  houseNumber: String,
+  postalCode: String,
+  city: String,
+});
 
 const ParcelSchema = new mongoose.Schema({
-    name : {
-        type: String,
-        required:true,
-    },
-    address : {
-        type:String,
-        required:true,
-    },
-    weight : {
-        type:String,
-        required:true,
-    },
-    value : {
-        type:Number,
-        required:true,
-    },
-    isApproved : {
-        type : Boolean,
-        required : true,
-    }
-})
+  name: String,
+  weight: Number,
+  value: Number,
+  address: AddressSchema,
+});
 
-module.exports = mongoose.model("Parcel",ParcelSchema);
+module.exports = mongoose.model("Parcel", ParcelSchema);
