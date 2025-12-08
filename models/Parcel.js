@@ -1,23 +1,24 @@
 ﻿const mongoose = require("mongoose");
 
-const parcelSchema = new mongoose.Schema(
+const AddressSchema = new mongoose.Schema(
   {
-    recipientName: { type: String, required: true },
-    city: { type: String, required: true },
-    postalCode: { type: String },
-    weight: { type: Number },
+    street: String,
+    houseNumber: String,
+    postalCode: String,
+    city: String,
+  },
+  { _id: false }
+);
 
-    status: {
-      type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
-      default: "PENDING",
-      index: true,
-    },
-
-    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    approvedAt: { type: Date },
+const ParcelSchema = new mongoose.Schema(
+  {
+    name: String,
+    weight: Number,
+    value: Number,
+    address: AddressSchema,
+    isApproved: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Parcel", parcelSchema);
+module.exports = mongoose.model("Parcel", ParcelSchema);
