@@ -47,7 +47,7 @@ const loginUser = async (req, res) => {
         httpOnly: true,
         secure: true, // true in production
         sameSite: "none", // cross-site in prod
-    }).status(200).json({ message: "Login successful!" ,token});
+    }).status(200).json({ message: "Login successful!" ,token,dept:existingUser.dept});
   } catch (error) {
     return res
       .status(500)
