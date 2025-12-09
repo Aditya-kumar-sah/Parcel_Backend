@@ -14,6 +14,6 @@ const ParcelSchema = new mongoose.Schema({
   address: AddressSchema,
   isApproved : Boolean,
   department:String,
-});
+},{ timestamps: true });
 
 module.exports = mongoose.model("Parcel", ParcelSchema);

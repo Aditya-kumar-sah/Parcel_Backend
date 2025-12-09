@@ -135,9 +135,9 @@ const approveParcel = async (req, res) => {
 
     let department = "Heavy";
 
-    if (parcel.value <= minValue) {
+    if (Number(parcel.weight) <= minValue) {
       department = "Mail";
-    } else if (parcel.value <= maxValue) {
+    } else if (Number(parcel.weight) <= maxValue) {
       department = "Regular";
     }
 
