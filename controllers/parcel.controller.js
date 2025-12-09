@@ -95,4 +95,85 @@ const getApprovedParcels = async (req, res) => {
   }
 };
 
-module.exports = { uploadXmlAndSaveParcels ,getApprovedParcels};
+
+const getPendingParcels = async (req, res) => {
+  try {
+    let limits = await CategoryRange.findOne();
+    if (!limits) {
+      limits = await CategoryRange.create({});
+    }
+    const {thresholdValue } = limits;
+
+    const pending = await Parcel.find({isApproved: false, value: { $gt: thresholdValue },}).sort({createdAt: -1,});
+
+    res.status(200).json(pending);
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const approveParcel = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let limits = await CategoryRange.findOne();
+    if (!limits) {
+      limits = await CategoryRange.create({});
+    }
+
+    const { minValue, maxValue } = limits;
+
+    const parcel = await Parcel.findById(id);
+
+    if (!parcel) {
+      return res.status(404).json({ message: "Parcel not found" });
+    }
+
+    if (parcel.isApproved) {
+      return res.status(400).json({ message: "Parcel already approved" });
+    }
+
+    let department = "Heavy";
+
+    if (parcel.value <= minValue) {
+      department = "Mail";
+    } else if (parcel.value <= maxValue) {
+      department = "Regular";
+    }
+
+    const updated = await Parcel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isApproved: true,
+          department: department,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+const rejectParcel = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Parcel.findOneAndDelete({_id: id,isApproved: false,});
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Parcel not found or already approved" });
+    }
+
+    res.status(200).json({ message: "Rejected and removed", parcelId: id });
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { uploadXmlAndSaveParcels ,getApprovedParcels,rejectParcel,approveParcel,getPendingParcels};
